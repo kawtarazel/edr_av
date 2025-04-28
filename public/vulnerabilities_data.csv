@@ -1,0 +1,21 @@
+AssetID;AssetName;AssetType;IsCritical;IsPatchable;LastScanDate;VulnerabilityID;VulnerabilityName;Severity;DetectionSource;DetectionDate;PatchAvailableDate;PatchAppliedDate;Status;RecommendedTimeframe
+ASSET-0001;ÉQU-0001;Équipement sécurité;Oui;Oui;15/06/2024;VULN-00001;Vulnerability-1;Mineure;Tests d'intrusion;23/04/2025;03/05/2025;;Open;71
+ASSET-0001;ÉQU-0001;Équipement sécurité;Oui;Oui;15/06/2024;VULN-00002;Vulnerability-2;Mineure;Tests d'intrusion;09/09/2024;24/09/2024;;Open;62
+ASSET-0001;ÉQU-0001;Équipement sécurité;Oui;Oui;15/06/2024;VULN-00003;Vulnerability-3;Mineure;MACERT;29/10/2024;08/11/2024;;Open;54
+ASSET-0001;ÉQU-0001;Équipement sécurité;Oui;Oui;15/06/2024;VULN-00004;Vulnerability-4;Majeure;Audit Sécurité;02/12/2024;15/12/2024;;Open;15
+ASSET-0001;ÉQU-0001;Équipement sécurité;Oui;Oui;15/06/2024;VULN-00005;Vulnerability-5;Majeure;Scan Interne;22/08/2024;26/08/2024;08/10/2024;Resolved;13
+ASSET-0002;ÉQU-0002;Équipement sécurité;Oui;Non;12/12/2024;VULN-00006;Vulnerability-6;Mineure;MACERT;12/12/2024;26/12/2024;;Not Applicable;84
+ASSET-0002;ÉQU-0002;Équipement sécurité;Oui;Non;12/12/2024;VULN-00007;Vulnerability-7;Majeure;Audit Sécurité;31/12/2024;23/01/2025;;Not Applicable;30
+ASSET-0003;ÉQU-0003;Équipement réseau;Non;Non;20/02/2025;VULN-00008;Vulnerability-8;Critique;Scan Interne;05/03/2025;01/04/2025;;Not Applicable;5
+ASSET-0003;ÉQU-0003;Équipement réseau;Non;Non;20/02/2025;VULN-00009;Vulnerability-9;Majeure;Audit Sécurité;26/02/2025;16/03/2025;;Not Applicable;11
+ASSET-0003;ÉQU-0003;Équipement réseau;Non;Non;20/02/2025;VULN-00010;Vulnerability-10;Mineure;Audit Sécurité;18/04/2025;23/04/2025;;Not Applicable;60
+ASSET-0003;ÉQU-0003;Équipement réseau;Non;Non;20/02/2025;VULN-00011;Vulnerability-11;Critique;Scan Interne;21/02/2025;08/03/2025;;Not Applicable;5
+ASSET-0004;ÉQU-0004;Équipement réseau;Non;Oui;15/02/2025;VULN-00012;Vulnerability-12;Mineure;Tests d'intrusion;30/03/2025;11/04/2025;;Open;61
+ASSET-0004;ÉQU-0004;Équipement réseau;Non;Oui;15/02/2025;VULN-00013;Vulnerability-13;Mineure;Tests d'intrusion;07/04/2025;24/04/2025;;In Progress;50
+ASSET-0005;ÉQU-0005;Équipement réseau;Non;Oui;16/06/2024;VULN-00014;Vulnerability-14;Mineure;MACERT;05/12/2024;18/12/2024;;In Progress;61
+ASSET-0006;SER-0006;Serveur;Non;Oui;23/01/2025;VULN-00015;Vulnerability-15;Majeure;Tests d'intrusion;14/04/2025;29/04/2025;;Open;24
+ASSET-0007;SER-0007;Serveur;Non;Oui;05/07/2024;VULN-00016;Vulnerability-16;Majeure;Audit Sécurité;17/04/2025;03/05/2025;;Open;29
+ASSET-0007;SER-0007;Serveur;Non;Oui;05/07/2024;VULN-00017;Vulnerability-17;Majeure;MACERT;20/01/2025;07/02/2025;;Open;11
+ASSET-0007;SER-0007;Serveur;Non;Oui;05/07/2024;VULN-00018;Vulnerability-18;Mineure;MACERT;02/09/2024;01/10/2024;27/12/2024;Resolved;44
+ASSET-0007;SER-0007;Serveur;Non;Oui;05/07/2024;VULN-00019;Vulnerability-19;Mineure;MACERT;19/04/2025;30/04/2025;;Open;30
+ASSET-0007;SER-0007;Serveur;Non;Oui;05/07/2024;VULN-00020;Vulnerability-20;Majeure;Scan Interne;12/10/2024;26/10/2024;;Open;25
