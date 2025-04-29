@@ -56,9 +56,9 @@ const SEVERITY_COLORS: SeverityColorMap = {
   'High': '#f0ad4e',
   'Medium': '#5bc0de',
   'Low': '#5cb85c',
-  'Critique': '#d9534f',
-  'Majeure': '#f0ad4e',
-  'Mineure': '#5cb85c'
+  'Critique': '#ff0000',     // Rouge vif pour les critiques
+  'Majeure': '#ffa500',      // Orange pour les majeures
+  'Mineure': '#00ff00'       // Vert pour les mineures
 };
 
 const DashboardVisualization: React.FC = () => {
@@ -124,7 +124,7 @@ const DashboardVisualization: React.FC = () => {
     const loadData = async () => {
       try {
         // Charger les données EDR
-        const edrResponse = await fetch('/public/edr_data.csv');
+        const edrResponse = await fetch('/edr_data.csv');
         const edrText = await edrResponse.text();
         const edrResult = Papa.parse<EdrDataType>(edrText, { 
           header: true, 
@@ -133,7 +133,7 @@ const DashboardVisualization: React.FC = () => {
         });
         
         // Charger les données de vulnérabilités
-        const vulnResponse = await fetch('/public/vulnerabilities_data.csv');
+        const vulnResponse = await fetch('/vulnerabilities_data.csv');
         const vulnText = await vulnResponse.text();
         const vulnResult = Papa.parse<VulnDataType>(vulnText, { 
           header: true, 
@@ -224,20 +224,33 @@ const DashboardVisualization: React.FC = () => {
 
   // Fonction pour calculer les KPIs de vulnérabilité
   const calculateVulnKpis = (data: VulnDataType[]) => {
-    // Nombre total de vulnérabilités
-    const totalVulnerabilities = data.length;
-    
-    // Répartition par sévérité
+    // Helper function pour parser les dates au format français
+    const parseDate = (dateStr: string) => {
+      if (!dateStr) return null;
+      const [day, month, year] = dateStr.split('/').map(Number);
+      return new Date(year, month - 1, day);
+    };
+
+    // Calculer la répartition par sévérité sur toutes les vulnérabilités
     const severityCounts = calculateVulnSeverityCounts(data);
+    const totalVulns = data.length;
     
     const severityData = Object.keys(severityCounts).map(key => ({
       name: key,
       value: severityCounts[key],
-      percentage: (severityCounts[key] / totalVulnerabilities) * 100
+      percentage: (severityCounts[key] / totalVulns) * 100
     }));
+
+    // Filtrer les vulnérabilités applicables et patchables pour les autres métriques
+    const applicableVulns = data.filter(vuln => 
+      vuln.Status !== "Not Applicable" && 
+      vuln.IsPatchable === "Oui"
+    );
+    
+    const totalVulnerabilities = applicableVulns.length;
     
     // Statut des vulnérabilités
-    const statusCounts = calculateVulnStatusCounts(data);
+    const statusCounts = calculateVulnStatusCounts(applicableVulns);
     
     const statusData = Object.keys(statusCounts).map(key => ({
       name: key,
@@ -246,7 +259,7 @@ const DashboardVisualization: React.FC = () => {
     }));
     
     // Répartition par source de détection
-    const sourceCounts = calculateSourceCounts(data);
+    const sourceCounts = calculateSourceCounts(applicableVulns);
     
     const sourceData = Object.keys(sourceCounts).map(key => ({
       name: key,
@@ -255,47 +268,75 @@ const DashboardVisualization: React.FC = () => {
     }));
     
     // Taux de correction
-    const resolvedVulnerabilities = data.filter(vuln => vuln.Status === "Resolved").length;
+    const resolvedVulnerabilities = applicableVulns.filter(vuln => vuln.Status === "Resolved").length;
     const remediationRate = (resolvedVulnerabilities / totalVulnerabilities) * 100;
     
     // Temps moyen de correction (en jours)
-    const resolvedVulns = data.filter(vuln => vuln.Status === "Resolved" && vuln.PatchAppliedDate && vuln.DetectionDate);
+    const resolvedVulns = applicableVulns.filter(vuln => 
+      vuln.Status === "Resolved" && 
+      vuln.PatchAppliedDate && 
+      vuln.DetectionDate
+    );
+
     let totalRemediationTime = 0;
+    let validRemediationCount = 0;
     
     resolvedVulns.forEach(vuln => {
-      const detectionDate = new Date(vuln.DetectionDate);
-      const patchDate = new Date(vuln.PatchAppliedDate);
-      const timeDiff = patchDate.getTime() - detectionDate.getTime();
-      const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
-      totalRemediationTime += daysDiff;
+      const detectionDate = parseDate(vuln.DetectionDate);
+      const patchDate = parseDate(vuln.PatchAppliedDate);
+      
+      if (detectionDate && patchDate) {
+        const timeDiff = patchDate.getTime() - detectionDate.getTime();
+        const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+        if (daysDiff >= 0) {
+          totalRemediationTime += daysDiff;
+          validRemediationCount++;
+        }
+      }
     });
     
-    const avgRemediationTime = resolvedVulns.length > 0 ? totalRemediationTime / resolvedVulns.length : 0;
+    const avgRemediationTime = validRemediationCount > 0 ? 
+      totalRemediationTime / validRemediationCount : 0;
     
     // Assets critiques non patchables
-    const criticalAssets = [...new Set(data.filter(vuln => vuln.IsCritical === "Oui").map(vuln => vuln.AssetID))];
-    const unpatchableCriticalAssets = [...new Set(data.filter(vuln => 
-      vuln.IsCritical === "Oui" && vuln.IsPatchable === "Non"
-    ).map(vuln => vuln.AssetID))];
+    const criticalAssets = [...new Set(data
+      .filter(vuln => vuln.IsCritical === "Oui")
+      .map(vuln => vuln.AssetID))];
+      
+    const unpatchableCriticalAssets = [...new Set(data
+      .filter(vuln => 
+        vuln.IsCritical === "Oui" && 
+        vuln.IsPatchable === "Non"
+      )
+      .map(vuln => vuln.AssetID))];
     
     const criticalVulnerabilityRate = criticalAssets.length > 0 ? 
       (unpatchableCriticalAssets.length / criticalAssets.length) * 100 : 0;
     
     // Correctifs appliqués dans les délais
+    let totalPatchableVulns = 0;
     let patchesInTime = 0;
-    resolvedVulns.forEach(vuln => {
-      const detectionDate = new Date(vuln.DetectionDate);
-      const patchDate = new Date(vuln.PatchAppliedDate);
-      const actualDays = (patchDate.getTime() - detectionDate.getTime()) / (1000 * 60 * 60 * 24);
-      const recommendedDays = vuln.RecommendedTimeframe || Infinity;
-      
-      if (actualDays <= recommendedDays) {
-        patchesInTime++;
+    const currentDate = new Date(2025, 3, 29); // 29 avril 2025
+
+    applicableVulns.forEach(vuln => {
+      if (vuln.IsPatchable === "Oui") {
+        totalPatchableVulns++;
+        const detectionDate = parseDate(vuln.DetectionDate);
+        const patchDate = vuln.Status === "Resolved" ? parseDate(vuln.PatchAppliedDate) : currentDate;
+        
+        if (detectionDate && patchDate) {
+          const actualDays = (patchDate.getTime() - detectionDate.getTime()) / (1000 * 60 * 60 * 24);
+          const recommendedDays = vuln.RecommendedTimeframe || Infinity;
+          
+          if (actualDays <= recommendedDays) {
+            patchesInTime++;
+          }
+        }
       }
     });
     
-    const patchesInTimeRate = resolvedVulns.length > 0 ? 
-      (patchesInTime / resolvedVulns.length) * 100 : 0;
+    const patchesInTimeRate = totalPatchableVulns > 0 ? 
+      (patchesInTime / totalPatchableVulns) * 100 : 0;
     
     setVulnKpis({
       totalVulnerabilities,
@@ -333,10 +374,15 @@ const DashboardVisualization: React.FC = () => {
 
   // Helper functions for Vulnerability KPIs
   const calculateVulnSeverityCounts = (data: VulnDataType[]): CountObject => {
-    return data.reduce((acc: CountObject, vuln) => {
-      acc[vuln.Severity] = (acc[vuln.Severity] || 0) + 1;
-      return acc;
-    }, {});
+    console.log("All vulnerabilities:", data.map(v => v.Severity)); // Debug log
+    const counts: CountObject = {};
+    
+    data.forEach(vuln => {
+      counts[vuln.Severity] = (counts[vuln.Severity] || 0) + 1;
+    });
+
+    console.log("Severity counts:", counts); // Debug log
+    return counts;
   };
 
   const calculateVulnStatusCounts = (data: VulnDataType[]): CountObject => {
